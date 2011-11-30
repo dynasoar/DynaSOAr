@@ -1,3 +1,4 @@
 nbbuild.xml
 nbproject/*
 .DS_Store
+build/*
