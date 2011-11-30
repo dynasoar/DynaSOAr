@@ -2,3 +2,6 @@ nbbuild.xml
 nbproject/*
 .DS_Store
 build/*
+.classpath
+.project
+bin/*

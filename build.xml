@@ -47,7 +47,7 @@
         </junit>
     </target>
 
-    <target name="run" depends="jar">
+    <target name="boot">
         <java fork="true" classname="${main-class}">
             <classpath>
                 <path refid="classpath"/>
