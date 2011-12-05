@@ -7,27 +7,61 @@ import java.util.Map;
 import org.apache.log4j.Logger;
 import org.codehaus.jackson.map.ObjectMapper;
 
+/*
+ * Reads and maintains list of configuration settings in memory.
+ */
 public class Configuration {
 	private static Logger logger = Logger.getLogger(Configuration.class);
+	private static HashMap<String, String> config = null;
 
-	public static HashMap<String, String> readConfiguration() {
+	/**
+	 * Reads configuration from default file. TODO: Replace it with a config
+	 * file watcher
+	 */
+	public static void readConfiguration() {
 		// TODO: Change path accordingly. Use relative path.
 		String path = "config.json";
-		return readConfiguration(path);
+		readConfiguration(path);
 	}
 
-	public static HashMap<String, String> readConfiguration(String path) {
-		HashMap<String, String> configMap = null;
+	/**
+	 * Reads configuration from specified config file and loads it into memory.
+	 * TODO: Replace it with a config file watcher
+	 * 
+	 * @param path
+	 */
+	public static void readConfiguration(String path) {
 
 		// Parse the file content using Jackson
 		ObjectMapper mapper = new ObjectMapper();
 		try {
-			configMap = (HashMap<String, String>) mapper.readValue(new File(
+			config = (HashMap<String, String>) mapper.readValue(new File(
 					"user.json"), Map.class);
 		} catch (Exception e) {
 			logger.error("Configuration Parsing Failed.", e);
 		}
+	}
 
-		return configMap;
+	/**
+	 * Get value of a specified configuration string. Returns null if config
+	 * setting does not exist.
+	 * 
+	 * @param name
+	 * @return
+	 */
+	public static String getConfig(String name) {
+		// TODO: Check if the config hashmap is loaded first
+		return null;
+	}
+
+	/**
+	 * Sets value of a specified configuration string.
+	 * 
+	 * @param name
+	 * @param value
+	 * @return
+	 */
+	public static void setConfig(String name, String value) {
+
 	}
 }
