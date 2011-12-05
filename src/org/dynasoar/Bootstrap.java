@@ -1,13 +1,19 @@
 package org.dynasoar;
 
-import java.util.HashMap;
-
 import org.dynasoar.config.Configuration;
+import org.dynasoar.monitor.NodeMonitor;
 
+/**
+ * Initializes and starts up the application.
+ * 
+ * @author Rakshit Menpara
+ */
 public class Bootstrap {
-	public static HashMap<String, String> config = null;
 	public static void main(String args[]) {
 		// Read configuration file
-		config = Configuration.readConfiguration();
+		Configuration.readConfiguration();
+
+		// Start up NodeMonitor
+		NodeMonitor.start();
 	}
 }
