@@ -1,7 +1,6 @@
 package org.dynasoar.service;
 
 import org.apache.log4j.Logger;
-import org.dynasoar.communicator.NodeCommunicator;
 
 /**
  * ServiceMonitor is responsible for monitoring changes in Service config files.

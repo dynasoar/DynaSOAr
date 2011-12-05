@@ -2,7 +2,6 @@ package org.dynasoar.monitor;
 
 import org.apache.log4j.Logger;
 import org.dynasoar.communicator.NodeCommunicator;
-import org.dynasoar.config.Configuration;
 import org.dynasoar.service.ServiceMonitor;
 
 /**
