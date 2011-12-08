@@ -35,8 +35,10 @@ public class Configuration {
 		// Parse the file content using Jackson
 		ObjectMapper mapper = new ObjectMapper();
 		try {
-			config = (HashMap<String, String>) mapper.readValue(new File(
-					"user.json"), Map.class);
+                        File tmpFile  = new File(path);
+                        logger.info("File Exists: " + tmpFile.getAbsoluteFile().getPath());
+                        
+			config = (HashMap<String, String>) mapper.readValue(tmpFile, Map.class);
 		} catch (Exception e) {
 			logger.error("Configuration Parsing Failed.", e);
 		}
@@ -51,7 +53,10 @@ public class Configuration {
 	 */
 	public static String getConfig(String name) {
 		// TODO: Check if the config hashmap is loaded first
-		return null;
+		if(config.isEmpty())	
+			return null;
+		else
+			return config.get(name);
 	}
 
 	/**
