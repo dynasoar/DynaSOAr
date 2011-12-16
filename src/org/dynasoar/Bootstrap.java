@@ -29,7 +29,7 @@ public class Bootstrap {
 		ServiceMonitor.start();
 		
 		// Start up NodeMonitor
-		//NodeMonitor.start();
+		NodeMonitor.start();
 		
 		
 	}
