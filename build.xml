@@ -1,6 +1,7 @@
 <project name="DynaSOAr" basedir="." default="clean-build">
     <property name="src.dir"     value="src"/>
     <property name="test.dir"     value="test"/>
+    <property name="report.dir" value="reports" />
 
     <property name="build.dir"   value="build"/>
     <property name="classes.dir" value="${build.dir}/classes"/>
@@ -34,15 +35,16 @@
         </jar>
     </target>
 
-    <target name="test" depends="compile">
-        <junit printsummary="yes">
+    <target name="test" depends="jar">
+        <junit printsummary="yes" showoutput="yes" haltonfailure="yes">
             <classpath>
                 <path refid="classpath"/>
                 <path refid="application"/>
             </classpath>
             
-            <batchtest fork="yes">
-                <fileset dir="${test.dir}" includes="*Test.java"/>
+            <batchtest fork="yes" todir="${report.dir}">
+		<formatter type="xml"/>
+                <fileset dir="${test.dir}" includes="**/*Test.java"/>
             </batchtest>
         </junit>
     </target>
