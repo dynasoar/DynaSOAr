@@ -4,8 +4,5 @@ nbproject/*
 build/*
 .classpath
 .project
-bin/*/src/config.json~
+bin/*
 /lib/nblibraries.properties
-/src/org/dynasoar/config/Configuration.java~
-/test/org/dynasoar/dirWatcher/DirectoryWatcherTest.java
-/src/config.json~

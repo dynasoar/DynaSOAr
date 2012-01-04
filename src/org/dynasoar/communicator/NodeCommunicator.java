@@ -1,7 +1,6 @@
 package org.dynasoar.communicator;
 
 import org.apache.log4j.Logger;
-import org.dynasoar.queueListner.Listner;
 
 /**
  * Takes care of communications between different nodes, along with maintaining
@@ -46,7 +45,6 @@ public class NodeCommunicator implements Runnable {
         }
         while (true) {
             try {
-                Listner.message_Receiver("msgProducer");
             } catch (Exception e) {
             }
         }

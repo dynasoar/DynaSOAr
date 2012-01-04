@@ -11,10 +11,9 @@ import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
 import java.util.List;
+
 import org.apache.log4j.Logger;
-import org.dynasoar.Bootstrap;
 import org.dynasoar.config.Configuration;
-import org.dynasoar.service.ServiceMonitor;
 
 public class DirectoryWatcher {
 
@@ -60,7 +59,6 @@ public class DirectoryWatcher {
                             .append(" ")
                             .append(Configuration.getConfig("WARfileDir"));
                 }
-                ServiceMonitor.message_Producer(message.toString());
             }
         } catch (Exception e) {
             logger.error("An error occurred while watching directory: " + dirPath, e);

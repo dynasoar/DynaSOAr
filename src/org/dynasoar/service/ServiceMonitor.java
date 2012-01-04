@@ -3,9 +3,6 @@ package org.dynasoar.service;
 import org.apache.log4j.Logger;
 import org.dynasoar.dirWatcher.DirectoryWatcher;
 import org.dynasoar.config.Configuration;
-import com.rabbitmq.client.ConnectionFactory;
-import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.Channel;
 
 /**
  * ServiceMonitor is responsible for monitoring changes in Service config files.
@@ -55,21 +52,4 @@ public class ServiceMonitor implements Runnable {
 
     }
 
-    public static void message_Producer(String message) throws Exception {
-        
-        String QUEUE_NAME = "msgProducer";
-        //System.out.println("Queue name " + Configuration.getConfig("QueueName"));
-        ConnectionFactory factory = new ConnectionFactory();
-        factory.setHost("localhost");
-        Connection connection = factory.newConnection();
-        Channel channel = connection.createChannel();
-
-        //channel.queueDeclare(QUEUE_NAME, false, false, false, null);
-
-        channel.basicPublish("", QUEUE_NAME, null, message.getBytes());
-        System.out.println(" [x] Sent '" + message + "'");
-
-        channel.close();
-        connection.close();
-    }
 }
