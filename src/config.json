@@ -1,6 +1,0 @@
-{
-    "serviceConfigDir":"/home/sagar/Service Config",
-    "WARDir":"/home/sagar/WAR File",
-    "QueueName":"msgProducer",
-    "IPAddress":"localhost"
-}
