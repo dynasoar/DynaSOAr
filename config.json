@@ -1,4 +1,4 @@
 {
-	"serviceConfigDir":"/home/sagar/Service Config",
-	"deployDir":"/homme/sagar/WAR File"
+	"serviceConfigDir":"./sample/serviceConfig/",
+	"deployDir":"./sample/deploy/"
 }
