@@ -14,6 +14,7 @@ import javax.jmdns.ServiceInfo;
 import javax.jmdns.ServiceListener;
 
 import org.apache.log4j.Logger;
+import org.dynasoar.config.Configuration;
 import org.dynasoar.util.NetworkUtil;
 
 /**
@@ -81,20 +82,23 @@ public class NodeCommunicator implements Runnable {
 
 			// Register self as a service
 			ServiceInfo si = ServiceInfo.create("_dynasoar._http._tcp.local.",
-					"dynasoar", 3030, "DynaSOAr Service");
+					Configuration.getConfig("nodeName"), 3030,
+					"DynaSOAr Service node");
 
 			Thread.sleep(1000);
 			jmDNS.registerService(si);
 			logger.info("Service added");
 
 			while (!shutdown) {
-				// TODO: Implement all the TCP comm stuff
-				// jmDNS.printServices();
-
-				ServiceInfo[] services = jmDNS.list("_dynasoar._http._tcp.local.");
-
-				logger.info(jmDNS.getInterface() + " :: Listed: "
-						+ services.length);
+				// TODO: Make sure all nodes are in sync
+				
+				// Perhaps, calculate a hash of config files and make sure all nodes has the same hash?
+				// Or, maintain lastSync timestamp on disk?
+				
+				// Things to sync
+				// * Service config files and WAR packages [Get a hash(?) from ServiceMonitor]
+				// * Service deploy info [Get from ServiceMonitor]
+				// * Node loads [Get current Node's load from NodeMonitor. Maintain list of loads of all nodes in Communicator]
 
 				Thread.sleep(5000);
 			}
@@ -119,45 +123,44 @@ public class NodeCommunicator implements Runnable {
 
 	static class DynasoarNodeListener implements ServiceListener {
 		public void serviceAdded(ServiceEvent event) {
-			logger.info("New HTTP Service added - " + event.getInfo());
+			logger.info("New DynaSOAr Service node added - " + event.getInfo());
+			logger.debug("Host Address: " + event.getInfo().getHostAddress());
+			logger.debug("Port: " + event.getInfo().getPort());
+			logger.debug("Qualified Name: "
+					+ event.getInfo().getQualifiedName());
+			logger.debug("Server: " + event.getInfo().getServer());
+			logger.debug("URL: " + event.getInfo().getURL());
+			logger.debug("Address: " + event.getInfo().getAddress());
+			logger.debug("InetAddress: " + event.getInfo().getInetAddress());
 
-			ServiceInfo[] services = event.getDNS().list("_http._tcp.local.");
-			logger.info("Listed in event Added: " + services.length);
+			// Add the node address to communicator
+			NodeCommunicator.get().addNode(event.getInfo().getName(),
+					event.getInfo().getInetAddress());
 		}
 
 		public void serviceRemoved(ServiceEvent event) {
-			logger.info("HTTP Service removed - " + event.getInfo().getName());
+			logger.info("DynaSOAr Service node removed - "
+					+ event.getInfo().getName());
 
-			// Check if it is a valid DynaSOAr service
-			if (event.getInfo().getName().equalsIgnoreCase("dynasoar")) {
-				// Add the node address to communicator
-				logger.info("Host Address: " + event.getInfo().getHostAddress());
-				logger.info("Port: " + event.getInfo().getPort());
-				logger.info("Qualified Name: "
-						+ event.getInfo().getQualifiedName());
-				logger.info("Server: " + event.getInfo().getServer());
-				logger.info("URL: " + event.getInfo().getURL());
-				logger.info("Address: " + event.getInfo().getAddress());
-				logger.info("InetAddress: " + event.getInfo().getInetAddress());
-			}
+			NodeCommunicator.get().removeNode(event.getInfo().getName());
 		}
 
 		public void serviceResolved(ServiceEvent event) {
-			logger.info("HTTP Service resolved - " + event.getInfo().getName());
+			logger.info("DynaSOAr Service node resolved - "
+					+ event.getInfo().getName());
+			logger.debug("Host Address: " + event.getInfo().getHostAddress());
+			logger.debug("Port: " + event.getInfo().getPort());
+			logger.debug("Qualified Name: "
+					+ event.getInfo().getQualifiedName());
+			logger.debug("Server: " + event.getInfo().getServer());
+			logger.debug("URL: " + event.getInfo().getURL());
+			logger.debug("Address: " + event.getInfo().getAddress());
+			logger.debug("InetAddress: " + event.getInfo().getInetAddress());
 
-			// Check if it is a valid DynaSOAr service
-			if (event.getInfo().getName().equalsIgnoreCase("dynasoar")) {
-				// Add the node address to communicator
-				logger.info("Host Address: " + event.getInfo().getHostAddress());
-				logger.info("Port: " + event.getInfo().getPort());
-				logger.info("Qualified Name: "
-						+ event.getInfo().getQualifiedName());
-				logger.info("Server: " + event.getInfo().getServer());
-				logger.info("URL: " + event.getInfo().getURL());
-				logger.info("Address: " + event.getInfo().getAddress());
-				logger.info("InetAddress: " + event.getInfo().getInetAddress());
-			}
+			// Add the node address to communicator
+			NodeCommunicator.get().addNode(event.getInfo().getName(),
+					event.getInfo().getInetAddress());
+
 		}
 	}
-
 }
