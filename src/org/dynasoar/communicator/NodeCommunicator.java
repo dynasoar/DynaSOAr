@@ -65,8 +65,9 @@ public class NodeCommunicator implements Runnable {
 			}
 
 			jmDNS = JmDNS.create(address);
-			logger.debug("Address: " + address + " :: Interface: " + jmDNS.getInterface());
-			
+			logger.debug("Address: " + address + " :: Interface: "
+					+ jmDNS.getInterface());
+
 			java.util.logging.Logger logger = java.util.logging.Logger
 					.getLogger(JmDNS.class.toString());
 			ConsoleHandler handler = new ConsoleHandler();
@@ -75,11 +76,11 @@ public class NodeCommunicator implements Runnable {
 			handler.setLevel(Level.FINER);
 
 			// Start the mDNS listener
-			jmDNS.addServiceListener("_http._tcp.local.",
+			jmDNS.addServiceListener("_dynasoar._http._tcp.local.",
 					new DynasoarNodeListener());
 
 			// Register self as a service
-			ServiceInfo si = ServiceInfo.create("_http._tcp.local.",
+			ServiceInfo si = ServiceInfo.create("_dynasoar._http._tcp.local.",
 					"dynasoar", 3030, "DynaSOAr Service");
 
 			Thread.sleep(1000);
@@ -88,9 +89,9 @@ public class NodeCommunicator implements Runnable {
 
 			while (!shutdown) {
 				// TODO: Implement all the TCP comm stuff
-				//jmDNS.printServices();
+				// jmDNS.printServices();
 
-				ServiceInfo[] services = jmDNS.list("_http._tcp.local.");
+				ServiceInfo[] services = jmDNS.list("_dynasoar._http._tcp.local.");
 
 				logger.info(jmDNS.getInterface() + " :: Listed: "
 						+ services.length);
@@ -119,27 +120,16 @@ public class NodeCommunicator implements Runnable {
 	static class DynasoarNodeListener implements ServiceListener {
 		public void serviceAdded(ServiceEvent event) {
 			logger.info("New HTTP Service added - " + event.getInfo());
-			/*logger.info("New HTTP Service added - " + event.getInfo().getName());
 
-			// Check if it is a valid DynaSOAr service
-			if (event.getInfo().getName() == "dynasoar") {
-				// Add the node address to communicator
-				logger.info("Host Address: " + event.getInfo().getHostAddress());
-				logger.info("Port: " + event.getInfo().getPort());
-				logger.info("Qualified Name: "
-						+ event.getInfo().getQualifiedName());
-				logger.info("Server: " + event.getInfo().getServer());
-				logger.info("URL: " + event.getInfo().getURL());
-				logger.info("Address: " + event.getInfo().getAddress());
-				logger.info("InetAddress: " + event.getInfo().getInetAddress());
-			}*/
+			ServiceInfo[] services = event.getDNS().list("_http._tcp.local.");
+			logger.info("Listed in event Added: " + services.length);
 		}
 
 		public void serviceRemoved(ServiceEvent event) {
-			logger.info("New HTTP Service added - " + event.getInfo().getName());
+			logger.info("HTTP Service removed - " + event.getInfo().getName());
 
 			// Check if it is a valid DynaSOAr service
-			if (event.getInfo().getName() == "dynasoar") {
+			if (event.getInfo().getName().equalsIgnoreCase("dynasoar")) {
 				// Add the node address to communicator
 				logger.info("Host Address: " + event.getInfo().getHostAddress());
 				logger.info("Port: " + event.getInfo().getPort());
@@ -153,10 +143,10 @@ public class NodeCommunicator implements Runnable {
 		}
 
 		public void serviceResolved(ServiceEvent event) {
-			logger.info("New HTTP Service added - " + event.getInfo().getName());
+			logger.info("HTTP Service resolved - " + event.getInfo().getName());
 
 			// Check if it is a valid DynaSOAr service
-			if (event.getInfo().getName() == "dynasoar") {
+			if (event.getInfo().getName().equalsIgnoreCase("dynasoar")) {
 				// Add the node address to communicator
 				logger.info("Host Address: " + event.getInfo().getHostAddress());
 				logger.info("Port: " + event.getInfo().getPort());
