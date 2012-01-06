@@ -1,4 +1,5 @@
 {
+	"nodeName": "FirstNode",
 	"serviceConfigDir":"./sample/serviceConfig/",
 	"deployDir":"./sample/deploy/"
 }
