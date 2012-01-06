@@ -1,7 +1,7 @@
 package org.dynasoar.service;
 
 import org.apache.log4j.Logger;
-import org.dynasoar.dirWatcher.DirectoryWatcher;
+import org.dynasoar.sync.DirectoryWatcher;
 import org.dynasoar.config.Configuration;
 
 /**

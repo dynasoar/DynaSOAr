@@ -1,9 +1,6 @@
 package org.dynasoar.communicator;
 
-import java.net.Inet4Address;
 import java.net.InetAddress;
-import java.net.NetworkInterface;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;

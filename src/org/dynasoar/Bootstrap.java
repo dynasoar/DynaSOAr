@@ -14,9 +14,10 @@ import org.apache.log4j.BasicConfigurator;
 
 public class Bootstrap {
 
-	private static Logger log = Logger.getLogger(Bootstrap.class);
+	private static Logger logger = Logger.getLogger(Bootstrap.class);
 
 	public static void main(String args[]) {
+		logger.info("Starting up DynaSOAr Server...");
 
 		// Set up a simple configuration that logs on the console.
 		BasicConfigurator.configure();
@@ -38,5 +39,6 @@ public class Bootstrap {
 		// Start up NodeMonitor
 		NodeMonitor.start();
 
+		logger.info("Initialization complete. DynaSOAr is running.");
 	}
 }

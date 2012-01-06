@@ -12,18 +12,19 @@ public class NetworkUtil {
 	private static Logger logger = Logger.getLogger(NetworkUtil.class);
 
 	public static InetAddress getLocalNetworkAddress() throws SocketException {
-		Enumeration e = NetworkInterface.getNetworkInterfaces();
+		Enumeration<NetworkInterface> e = NetworkInterface
+				.getNetworkInterfaces();
 
 		while (e.hasMoreElements()) {
-			NetworkInterface ni = (NetworkInterface) e.nextElement();
+			NetworkInterface ni = e.nextElement();
 			logger.debug("Net interface: " + ni.getName());
 
 			if (ni.getName().equalsIgnoreCase("en0")
 					|| ni.getName().equalsIgnoreCase("eth0")) {
-				Enumeration e2 = ni.getInetAddresses();
+				Enumeration<InetAddress> e2 = ni.getInetAddresses();
 
 				while (e2.hasMoreElements()) {
-					InetAddress ip = (InetAddress) e2.nextElement();
+					InetAddress ip = e2.nextElement();
 					logger.debug("IP address: " + ip.toString());
 					if (ip instanceof Inet4Address) {
 						return ip;
