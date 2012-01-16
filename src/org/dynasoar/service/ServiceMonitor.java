@@ -3,6 +3,7 @@ package org.dynasoar.service;
 import org.apache.log4j.Logger;
 import org.dynasoar.sync.DirectoryWatcher;
 import org.dynasoar.config.Configuration;
+import java.util.*;
 
 /**
  * ServiceMonitor is responsible for monitoring changes in Service config files.
@@ -18,6 +19,45 @@ public class ServiceMonitor implements Runnable {
     private static Thread th = null;
     // Don't do this. Use constructors.
     DirectoryWatcher dir = new DirectoryWatcher();
+
+    static class Bean {
+
+        private String name;
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public String getName() {
+            return name;
+        }
+    }
+    private static HashMap<Bean, String> service = null;
+
+    public static class ServiceTracker {
+
+        public void serviceAdded(String serviceName) {
+            System.out.println("Service affected = " + serviceName);
+            Bean b = new Bean();
+            b.setName(serviceName);
+            service.put(b, serviceName);
+        }
+
+        public void serviceDeleted(String serviceName) {
+            System.out.println("Service affected = " + serviceName);
+            Bean b = new Bean();
+            b.setName(serviceName);
+            service.put(b, serviceName);
+        }
+
+        public void serviceModified(String serviceName) {
+            System.out.println("Service affected = " + serviceName);
+            Bean b = new Bean();
+            b.setName(serviceName);
+            service.put(b, serviceName);
+
+        }
+    }
 
     public static void start() {
         // TODO: Start this in a separate thread
@@ -38,18 +78,19 @@ public class ServiceMonitor implements Runnable {
     public void run() {
 
 
-        // TODO: Read "ServiceConfigDir" from configuration and start listening
+        // Read "ServiceConfigDir" from configuration and starts listening
         // to the directory
         String path = Configuration.getConfig("serviceConfigDir");
 
-        while (true) {
-            dir.watch(path);
-        }
+
+
+        // while (true) {
+        dir.watch(path, new ServiceTracker());
+        // }
         // In case of any changes in directory, Read service config file,
         // load/re-deploy the service on local server
 
         // Notify NodeCommunicator of all the changes occurred
 
     }
-
 }
