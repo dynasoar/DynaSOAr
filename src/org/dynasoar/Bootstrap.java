@@ -23,8 +23,8 @@ public class Bootstrap {
 		BasicConfigurator.configure();
 
 		// Check if configuration path is specified as a parameter
-		if (args.length > 2) {
-			String path = args[2];
+		if (args.length > 0) {
+			String path = args[0];
 
 			// Read configuration file
 			Configuration.readConfiguration(path);
