@@ -77,7 +77,7 @@ public class ServiceMonitor implements Runnable {
 		public void fileRemoved(String path) {
 			// TODO: Correct
 			DynasoarService service = this.readServiceConfig(path);
-			serviceMap.remove(service.getShortName();
+			serviceMap.remove(service.getShortName());
 		}
 
 		private DynasoarService readServiceConfig(String path) {
