@@ -1,6 +1,7 @@
 package org.dynasoar.service;
 
 import org.apache.log4j.Logger;
+import org.dynasoar.sync.ChangeEvent;
 import org.dynasoar.sync.DirectoryWatcher;
 import org.dynasoar.config.Configuration;
 import java.util.*;
@@ -14,83 +15,77 @@ import java.util.*;
  */
 public class ServiceMonitor implements Runnable {
 
-    private static ServiceMonitor current = null;
-    private static Logger logger = Logger.getLogger(ServiceMonitor.class);
-    private static Thread th = null;
-    // Don't do this. Use constructors.
-    DirectoryWatcher dir = new DirectoryWatcher();
+	private static ServiceMonitor current = null;
+	private static Logger logger = Logger.getLogger(ServiceMonitor.class);
+	private static Thread th = null;
+	private static HashMap<String, DynasoarService> serviceMap = new HashMap<String, DynasoarService>();
 
-    static class Bean {
+	public static void start() {
+		// TODO: Start this in a separate thread
+		current = new ServiceMonitor();
+		th = new Thread(current, "ServiceMonitor");
+		th.start();
+	}
 
-        private String name;
+	public static boolean isRunning() {
+		if (current == null) {
+			return false;
+		}
 
-        public void setName(String name) {
-            this.name = name;
-        }
+		return th.isAlive();
+	}
 
-        public String getName() {
-            return name;
-        }
-    }
-    private static HashMap<Bean, String> service = null;
+	@Override
+	public void run() {
 
-    public static class ServiceTracker {
+		// Read "ServiceConfigDir" from configuration and starts listening
+		// to the directory
+		String serviceConfigDirPath = Configuration
+				.getConfig("serviceConfigDir");
+		DirectoryWatcher dir = new DirectoryWatcher(
+				new ServiceConfigChangeEvent());
+		dir.watch(serviceConfigDirPath);
 
-        public void serviceAdded(String serviceName) {
-            System.out.println("Service affected = " + serviceName);
-            Bean b = new Bean();
-            b.setName(serviceName);
-            service.put(b, serviceName);
-        }
+		// In case of any changes in directory, Read service config file,
+		// load/re-deploy the service on local server
 
-        public void serviceDeleted(String serviceName) {
-            System.out.println("Service affected = " + serviceName);
-            Bean b = new Bean();
-            b.setName(serviceName);
-            service.put(b, serviceName);
-        }
+		// Notify NodeCommunicator of all the changes occurred
 
-        public void serviceModified(String serviceName) {
-            System.out.println("Service affected = " + serviceName);
-            Bean b = new Bean();
-            b.setName(serviceName);
-            service.put(b, serviceName);
+	}
 
-        }
-    }
+	/**
+	 * Implements ChangeEvent interface, which will handle directory change
+	 * events of Service Config Directory
+	 * 
+	 * @author Rakshit Menpara
+	 */
+	public static class ServiceConfigChangeEvent implements ChangeEvent {
 
-    public static void start() {
-        // TODO: Start this in a separate thread
-        current = new ServiceMonitor();
-        th = new Thread(current, "ServiceMonitor");
-        th.start();
-    }
+		@Override
+		public void fileCreated(String path) {
+			DynasoarService service = this.readServiceConfig(path);
+			serviceMap.put(service.getShortName(), service);
+		}
 
-    public static boolean isRunning() {
-        if (current == null) {
-            return false;
-        }
+		@Override
+		public void fileModified(String path) {
+			DynasoarService service = this.readServiceConfig(path);
+			serviceMap.put(service.getShortName(), service);
+		}
 
-        return th.isAlive();
-    }
+		@Override
+		public void fileRemoved(String path) {
+			// TODO: Correct
+			DynasoarService service = this.readServiceConfig(path);
+			serviceMap.remove(service.getShortName();
+		}
 
-    @Override
-    public void run() {
+		private DynasoarService readServiceConfig(String path) {
+			DynasoarService service = new DynasoarService();
 
+			// TODO: Read and parse the config file using JSON parser (jackson)
 
-        // Read "ServiceConfigDir" from configuration and starts listening
-        // to the directory
-        String path = Configuration.getConfig("serviceConfigDir");
-
-
-
-        // while (true) {
-        dir.watch(path, new ServiceTracker());
-        // }
-        // In case of any changes in directory, Read service config file,
-        // load/re-deploy the service on local server
-
-        // Notify NodeCommunicator of all the changes occurred
-
-    }
+			return service;
+		}
+	}
 }
