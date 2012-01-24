@@ -10,6 +10,7 @@
 * Threads communicate using built-in event queue
 * Load calculation and reporting for nodes
 * File synchronization between nodes for dynamic service deployment
+* Improve exception handling hierarchy
 
 ## Developer Reference
 * Jetty APIDocs:	http://download.eclipse.org/jetty/8.0.4.v20111024/apidocs/

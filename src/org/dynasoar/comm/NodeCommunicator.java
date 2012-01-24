@@ -1,7 +1,9 @@
-package org.dynasoar.communicator;
+package org.dynasoar.comm;
 
 import java.net.InetAddress;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
 
@@ -29,6 +31,7 @@ public class NodeCommunicator implements Runnable {
 	private JmDNS jmDNS = null;
 
 	private HashMap<String, InetAddress> nodes = null;
+	private List<Event> events = null;
 
 	public static void start() {
 		current = new NodeCommunicator();
@@ -60,6 +63,7 @@ public class NodeCommunicator implements Runnable {
 				address = InetAddress.getLocalHost();
 			}
 
+			// Initialize jmDNS for node discovery
 			jmDNS = JmDNS.create(address);
 			logger.debug("Address: " + address + " :: Interface: "
 					+ jmDNS.getInterface());
@@ -83,12 +87,17 @@ public class NodeCommunicator implements Runnable {
 			Thread.sleep(1000);
 			jmDNS.registerService(si);
 			logger.info("Service added");
+
 		} catch (Exception e) {
 			jmDNS.unregisterAllServices();
 			logger.error("An Error occurred while registering service.", e);
 		}
 
 		try {
+			// Initialize
+			nodes = new HashMap<String, InetAddress>();
+			events = new ArrayList<Event>();
+
 			Thread thisThread = Thread.currentThread();
 			while (thisThread == th) {
 				// TODO: Make sure all nodes are in sync
@@ -132,44 +141,36 @@ public class NodeCommunicator implements Runnable {
 
 	static class DynasoarNodeListener implements ServiceListener {
 		public void serviceAdded(ServiceEvent event) {
-			logger.info("New DynaSOAr Service node added - " + event.getInfo());
-			logger.debug("Host Address: " + event.getInfo().getHostAddress());
-			logger.debug("Port: " + event.getInfo().getPort());
-			logger.debug("Qualified Name: "
-					+ event.getInfo().getQualifiedName());
-			logger.debug("Server: " + event.getInfo().getServer());
-			logger.debug("URL: " + event.getInfo().getURL());
-			logger.debug("Address: " + event.getInfo().getAddress());
-			logger.debug("InetAddress: " + event.getInfo().getInetAddress());
+			if (event.getInfo() != null) {
+				logger.info("New DynaSOAr Service node added - "
+						+ event.getInfo());
+				logger.debug("InetAddress: " + event.getInfo().getInetAddress());
 
-			// Add the node address to communicator
-			NodeCommunicator.get().addNode(event.getInfo().getName(),
-					event.getInfo().getInetAddress());
+				// Add the node address to communicator
+				NodeCommunicator.get().addNode(event.getInfo().getName(),
+						event.getInfo().getInetAddress());
+			}
 		}
 
 		public void serviceRemoved(ServiceEvent event) {
-			logger.info("DynaSOAr Service node removed - "
-					+ event.getInfo().getName());
+			if (event.getInfo() != null) {
+				logger.info("DynaSOAr Service node removed - "
+						+ event.getInfo().getName());
 
-			NodeCommunicator.get().removeNode(event.getInfo().getName());
+				NodeCommunicator.get().removeNode(event.getInfo().getName());
+			}
 		}
 
 		public void serviceResolved(ServiceEvent event) {
-			logger.info("DynaSOAr Service node resolved - "
-					+ event.getInfo().getName());
-			logger.debug("Host Address: " + event.getInfo().getHostAddress());
-			logger.debug("Port: " + event.getInfo().getPort());
-			logger.debug("Qualified Name: "
-					+ event.getInfo().getQualifiedName());
-			logger.debug("Server: " + event.getInfo().getServer());
-			logger.debug("URL: " + event.getInfo().getURL());
-			logger.debug("Address: " + event.getInfo().getAddress());
-			logger.debug("InetAddress: " + event.getInfo().getInetAddress());
+			if (event.getInfo() != null) {
+				logger.info("DynaSOAr Service node resolved - "
+						+ event.getInfo().getName());
+				logger.debug("InetAddress: " + event.getInfo().getInetAddress());
 
-			// Add the node address to communicator
-			NodeCommunicator.get().addNode(event.getInfo().getName(),
-					event.getInfo().getInetAddress());
-
+				// Add the node address to communicator
+				NodeCommunicator.get().addNode(event.getInfo().getName(),
+						event.getInfo().getInetAddress());
+			}
 		}
 	}
 }

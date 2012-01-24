@@ -3,7 +3,7 @@ package org.dynasoar.webserver;
 import java.io.File;
 
 import org.apache.log4j.Logger;
-import org.dynasoar.communicator.NodeCommunicator;
+import org.dynasoar.comm.NodeCommunicator;
 import org.dynasoar.config.Configuration;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
@@ -36,12 +36,8 @@ public class WebServer implements Runnable {
 
 			// TODO: Notify the communicator once started
 
-			while (jettyServer != null) {
-				// Do something
-
-				logger.info("Alive");
-				Thread.sleep(1000);
-			}
+			// Join server thread to prevent from exiting
+			jettyServer.join();
 		} catch (Exception e) {
 			logger.error("Jetty server error", e);
 		}
