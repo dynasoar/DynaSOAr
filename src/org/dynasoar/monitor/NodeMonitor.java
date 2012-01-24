@@ -41,6 +41,13 @@ public class NodeMonitor {
 				logger.error("Thread busy.", e);
 			}
 		}
+
+		// Cleanly exit all threads when shutdown signal is sent
+		NodeCommunicator.shutdown();
+		ServiceMonitor.shutdown();
+		WebServer.shutdown();
+		
+		logger.info("NodeMonitor shutdown complete.");
 	}
 
 	public static void shutdown() {

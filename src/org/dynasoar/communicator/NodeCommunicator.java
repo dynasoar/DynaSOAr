@@ -25,9 +25,7 @@ public class NodeCommunicator implements Runnable {
 
 	private static NodeCommunicator current = null;
 	private static Logger logger = Logger.getLogger(NodeCommunicator.class);
-	private static Thread th = null;
-	private boolean shutdown = false;
-	private int pingInterval = 500;
+	private static volatile Thread th = null;
 	private JmDNS jmDNS = null;
 
 	private HashMap<String, InetAddress> nodes = null;
@@ -91,7 +89,8 @@ public class NodeCommunicator implements Runnable {
 		}
 
 		try {
-			while (!shutdown) {
+			Thread thisThread = Thread.currentThread();
+			while (thisThread == th) {
 				// TODO: Make sure all nodes are in sync
 
 				// Perhaps, calculate a hash of config files and make sure all
@@ -107,15 +106,20 @@ public class NodeCommunicator implements Runnable {
 
 				Thread.sleep(5000);
 			}
+
+			// Clean exit for the thread
+			jmDNS.unregisterAllServices();
+			logger.info("NodeCommunicator shutdown complete.");
+
 		} catch (Exception e) {
 			jmDNS.unregisterAllServices();
 			logger.error("An Error occurred in communication loop.", e);
 		}
 	}
 
-	public void shutdown() {
+	public static void shutdown() {
 		logger.info("Shutting Down NodeCommunicator");
-		shutdown = true;
+		th = null;
 	}
 
 	public void addNode(String name, InetAddress address) {

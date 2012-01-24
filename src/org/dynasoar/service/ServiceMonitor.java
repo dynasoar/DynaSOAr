@@ -52,11 +52,24 @@ public class ServiceMonitor implements Runnable {
 				new ServiceConfigChangeEvent());
 		dir.watch(serviceConfigDirPath);
 
-		// In case of any changes in directory, Read service config file,
-		// load/re-deploy the service on local server
+		// TODO: Thread loop
+		Thread thisThread = Thread.currentThread();
+		while (thisThread == th) {
+			// In case of any changes in directory, Read service config file,
+			// load/re-deploy the service on local server
 
-		// Notify NodeCommunicator of all the changes occurred
+			// Notify NodeCommunicator of all the changes occurred
 
+		}
+
+		// Handle clean exit
+		dir.exit();
+		logger.info("ServiceMonitor shutdown complete");
+	}
+
+	public static void shutdown() {
+		logger.info("Shutting down ServiceMonitor.");
+		th = null;
 	}
 
 	/**

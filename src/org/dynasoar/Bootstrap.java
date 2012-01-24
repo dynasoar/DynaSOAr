@@ -33,12 +33,18 @@ public class Bootstrap {
 			Configuration.readConfiguration();
 		}
 
-		// Start up ServiceMonitor
-		ServiceMonitor.start();
+		// Add Shutdown hook
+		Runtime.getRuntime().addShutdownHook(new Thread() {
+			@Override
+			public void run() {
+				logger.info("Shutdown signal received.");
+				NodeMonitor.shutdown();
+			}
+		});
+
+		logger.info("Initialization complete. DynaSOAr is running.");
 
 		// Start up NodeMonitor
 		NodeMonitor.start();
-
-		logger.info("Initialization complete. DynaSOAr is running.");
 	}
 }

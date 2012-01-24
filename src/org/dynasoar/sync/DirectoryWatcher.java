@@ -5,6 +5,7 @@ package org.dynasoar.sync;
  *
  * @author Sagar Virani
  */
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardWatchEventKinds;
@@ -13,14 +14,13 @@ import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
 
 import org.apache.log4j.Logger;
-import org.dynasoar.config.Configuration;
-import org.dynasoar.service.ServiceMonitor;
 
 // TODO: Write clean exit
 public class DirectoryWatcher {
 
 	private static Logger logger = Logger.getLogger(DirectoryWatcher.class);
 	private ChangeEvent changeEvent = null;
+	private WatchService watcher = null;
 
 	public DirectoryWatcher(ChangeEvent event) {
 		this.changeEvent = event;
@@ -28,12 +28,10 @@ public class DirectoryWatcher {
 
 	public void watch(String dirPath) {
 
-		// TODO: Move this to bootstrap
 		Path dirToMonitor = Paths.get(dirPath);
 
 		try {
-			WatchService watcher = dirToMonitor.getFileSystem()
-					.newWatchService();
+			watcher = dirToMonitor.getFileSystem().newWatchService();
 
 			// Register create, modify and delete watchers
 			dirToMonitor.register(watcher,
@@ -41,7 +39,7 @@ public class DirectoryWatcher {
 					StandardWatchEventKinds.ENTRY_DELETE,
 					StandardWatchEventKinds.ENTRY_MODIFY);
 
-			while (true) {
+			while (watcher != null) {
 				// Retrieve key
 				WatchKey key = watcher.take();
 
@@ -72,6 +70,20 @@ public class DirectoryWatcher {
 		} catch (Exception e) {
 			logger.error("An error occurred while watching directory: "
 					+ dirPath, e);
+		}
+	}
+
+	public void exit() {
+		if (watcher != null) {
+			try {
+				logger.info("Removing watcher on serviceConfig.");
+				watcher.close();
+			} catch (IOException e) {
+				logger.error("Clean exit failed", e);
+			} finally {
+				logger.info("ServiceConfig watcher removed.");
+				watcher = null;
+			}
 		}
 	}
 }
