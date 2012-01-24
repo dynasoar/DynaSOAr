@@ -29,8 +29,8 @@ public class NodeMonitor {
 				// Invoke the service repository monitor
 				ServiceMonitor.start();
 			}
-			
-			if(!WebServer.isRunning()) {
+
+			if (!WebServer.isRunning()) {
 				// Start embedded Jetty Webserver
 				WebServer.start();
 			}

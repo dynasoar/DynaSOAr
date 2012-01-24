@@ -1,10 +1,16 @@
 package org.dynasoar.service;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.HashMap;
+
 import org.apache.log4j.Logger;
+import org.codehaus.jackson.JsonParseException;
+import org.codehaus.jackson.map.JsonMappingException;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.dynasoar.config.Configuration;
 import org.dynasoar.sync.ChangeEvent;
 import org.dynasoar.sync.DirectoryWatcher;
-import org.dynasoar.config.Configuration;
-import java.util.*;
 
 /**
  * ServiceMonitor is responsible for monitoring changes in Service config files.
@@ -64,26 +70,51 @@ public class ServiceMonitor implements Runnable {
 		@Override
 		public void fileCreated(String path) {
 			DynasoarService service = this.readServiceConfig(path);
-			serviceMap.put(service.getShortName(), service);
+
+			if (service != null) {
+				serviceMap.put(service.getShortName(), service);
+				logger.info("Service added - " + service.getName());
+			} else {
+				logger.info("Service Config File Null");
+			}
 		}
 
 		@Override
 		public void fileModified(String path) {
 			DynasoarService service = this.readServiceConfig(path);
-			serviceMap.put(service.getShortName(), service);
+
+			if (service != null) {
+				serviceMap.put(service.getShortName(), service);
+				logger.info("Service changed - " + service.getName());
+			} else {
+				logger.info("Service Config File Null");
+			}
 		}
 
 		@Override
 		public void fileRemoved(String path) {
 			// TODO: Correct
 			DynasoarService service = this.readServiceConfig(path);
-			serviceMap.remove(service.getShortName());
+
+			if (service != null) {
+				serviceMap.remove(service.getShortName());
+				logger.info("Service removed - " + service.getName());
+			} else {
+				logger.info("Service Config File Null");
+			}
 		}
 
 		private DynasoarService readServiceConfig(String path) {
-			DynasoarService service = new DynasoarService();
-
-			// TODO: Read and parse the config file using JSON parser (jackson)
+			// Read and parse the config file using JSON parser (jackson)
+			DynasoarService service = null;
+			File configFile = new File(path);
+			ObjectMapper mapper = new ObjectMapper();
+			try {
+				service = mapper.readValue(configFile, DynasoarService.class);
+				service.setShortName(configFile.getName());
+			} catch (Exception e) {
+				logger.error("ServiceConfig parsing failed.", e);
+			}
 
 			return service;
 		}

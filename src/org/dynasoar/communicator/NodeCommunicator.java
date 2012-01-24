@@ -85,23 +85,31 @@ public class NodeCommunicator implements Runnable {
 			Thread.sleep(1000);
 			jmDNS.registerService(si);
 			logger.info("Service added");
+		} catch (Exception e) {
+			jmDNS.unregisterAllServices();
+			logger.error("An Error occurred while registering service.", e);
+		}
 
+		try {
 			while (!shutdown) {
 				// TODO: Make sure all nodes are in sync
-				
-				// Perhaps, calculate a hash of config files and make sure all nodes has the same hash?
+
+				// Perhaps, calculate a hash of config files and make sure all
+				// nodes has the same hash?
 				// Or, maintain lastSync timestamp on disk?
-				
+
 				// Things to sync
-				// * Service config files and WAR packages [Get a hash(?) from ServiceMonitor]
+				// * Service config files and WAR packages [Get a hash(?) from
+				// ServiceMonitor]
 				// * Service deploy info [Get from ServiceMonitor]
-				// * Node loads [Get current Node's load from NodeMonitor. Maintain list of loads of all nodes in Communicator]
+				// * Node loads [Get current Node's load from NodeMonitor.
+				// Maintain list of loads of all nodes in Communicator]
 
 				Thread.sleep(5000);
 			}
 		} catch (Exception e) {
 			jmDNS.unregisterAllServices();
-			e.printStackTrace();
+			logger.error("An Error occurred in communication loop.", e);
 		}
 	}
 
