@@ -1,16 +1,16 @@
 package org.dynasoar.service;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.HashMap;
 
 import org.apache.log4j.Logger;
-import org.codehaus.jackson.JsonParseException;
-import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.dynasoar.comm.EventHandler;
+import org.dynasoar.comm.NodeCommunicator;
 import org.dynasoar.config.Configuration;
 import org.dynasoar.sync.ChangeEvent;
 import org.dynasoar.sync.DirectoryWatcher;
+import org.dynasoar.util.Event;
 
 /**
  * ServiceMonitor is responsible for monitoring changes in Service config files.
@@ -19,12 +19,16 @@ import org.dynasoar.sync.DirectoryWatcher;
  * 
  * @author Rakshit Menpara
  */
-public class ServiceMonitor implements Runnable {
+public class ServiceMonitor extends EventHandler implements Runnable {
 
 	private static ServiceMonitor current = null;
 	private static Logger logger = Logger.getLogger(ServiceMonitor.class);
 	private static Thread th = null;
 	private static HashMap<String, DynasoarService> serviceMap = new HashMap<String, DynasoarService>();
+
+	public ServiceMonitor() {
+		super(ServiceChangeEvent.class);
+	}
 
 	public static void start() {
 		// TODO: Start this in a separate thread
@@ -72,6 +76,25 @@ public class ServiceMonitor implements Runnable {
 		th = null;
 	}
 
+	public static void newEvent(Event event) {
+		if (current != null) {
+			current.emitEvent(event);
+		}
+	}
+
+	/**
+	 * {@link EventHandler#handle(Event)} implementation.
+	 */
+	@Override
+	public void handle(Event event) {
+		logger.info("Processing an event: " + event.toString());
+
+		// Delegate handling of the event if possible
+		if (event instanceof ServiceChangeEvent) {
+
+		}
+	}
+
 	/**
 	 * Implements ChangeEvent interface, which will handle directory change
 	 * events of Service Config Directory
@@ -86,6 +109,8 @@ public class ServiceMonitor implements Runnable {
 
 			if (service != null) {
 				serviceMap.put(service.getShortName(), service);
+				NodeCommunicator.newEvent(new ServiceChangeEvent(service,
+						ServiceEventType.ADDED));
 				logger.info("Service added - " + service.getName());
 			} else {
 				logger.info("Service Config File Null");
@@ -99,6 +124,8 @@ public class ServiceMonitor implements Runnable {
 			if (service != null) {
 				serviceMap.put(service.getShortName(), service);
 				logger.info("Service changed - " + service.getName());
+				NodeCommunicator.newEvent(new ServiceChangeEvent(service,
+						ServiceEventType.CHANGED));
 			} else {
 				logger.info("Service Config File Null");
 			}
@@ -112,6 +139,8 @@ public class ServiceMonitor implements Runnable {
 			if (service != null) {
 				serviceMap.remove(service.getShortName());
 				logger.info("Service removed - " + service.getName());
+				NodeCommunicator.newEvent(new ServiceChangeEvent(service,
+						ServiceEventType.REMOVED));
 			} else {
 				logger.info("Service Config File Null");
 			}

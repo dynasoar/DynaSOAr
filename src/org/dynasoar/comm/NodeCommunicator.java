@@ -1,9 +1,14 @@
 package org.dynasoar.comm;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.InetAddress;
-import java.util.ArrayList;
+import java.net.InetSocketAddress;
+import java.net.Socket;
+import java.net.SocketAddress;
 import java.util.HashMap;
-import java.util.List;
+import java.util.Iterator;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
 
@@ -14,6 +19,7 @@ import javax.jmdns.ServiceListener;
 
 import org.apache.log4j.Logger;
 import org.dynasoar.config.Configuration;
+import org.dynasoar.util.Event;
 import org.dynasoar.util.NetworkUtil;
 
 /**
@@ -23,7 +29,7 @@ import org.dynasoar.util.NetworkUtil;
  * 
  * @author Rakshit Menpara
  */
-public class NodeCommunicator implements Runnable {
+public class NodeCommunicator extends EventHandler implements Runnable {
 
 	private static NodeCommunicator current = null;
 	private static Logger logger = Logger.getLogger(NodeCommunicator.class);
@@ -31,7 +37,10 @@ public class NodeCommunicator implements Runnable {
 	private JmDNS jmDNS = null;
 
 	private HashMap<String, InetAddress> nodes = null;
-	private List<Event> events = null;
+
+	public NodeCommunicator() {
+		super(CommEvent.class);
+	}
 
 	public static void start() {
 		current = new NodeCommunicator();
@@ -96,10 +105,27 @@ public class NodeCommunicator implements Runnable {
 		try {
 			// Initialize
 			nodes = new HashMap<String, InetAddress>();
-			events = new ArrayList<Event>();
 
 			Thread thisThread = Thread.currentThread();
 			while (thisThread == th) {
+				// Process all the events
+				this.processEvents();
+
+				// Wait till any other event is added
+				logger.info("Waiting till a new event is added.");
+				super.wait();
+				logger.info("Resuming operations.");
+
+				// TODO: Start node comm listener
+				Socket listener = new Socket();
+				listener.bind(new InetSocketAddress(Integer
+						.parseInt(Configuration.getConfig("commPort"))));
+				
+				Event event = this.receiveEvent(listener);
+
+				if(event != null) {
+					newEvent(event);
+				}
 				// TODO: Make sure all nodes are in sync
 
 				// Perhaps, calculate a hash of config files and make sure all
@@ -131,12 +157,62 @@ public class NodeCommunicator implements Runnable {
 		th = null;
 	}
 
+	public static void newEvent(Event event) {
+		if (current != null) {
+			current.emitEvent(event);
+		}
+	}
+
 	public void addNode(String name, InetAddress address) {
 		nodes.put(name, address);
 	}
 
 	public void removeNode(String name) {
 		nodes.remove(name);
+	}
+
+	/**
+	 * {@link EventHandler#handle(Event)} implementation.
+	 */
+	@Override
+	public void handle(Event event) {
+		// TODO: Take action if necessary
+
+		// Distribute the event to all the available nodes
+		Iterator<String> i = nodes.keySet().iterator();
+		while (i.hasNext()) {
+			InetAddress nodeAddress = nodes.get(i.next());
+			try {
+				this.sendEvent(event, nodeAddress);
+			} catch (IOException e) {
+				logger.error("Error sending event to remote nodes", e);
+			}
+		}
+	}
+
+	private void sendEvent(Event event, InetAddress node) throws IOException {
+		// TODO: This could be optimized using a socket pool
+		Socket s = new Socket(node, Integer.parseInt(Configuration
+				.getConfig("commPort")));
+
+		ObjectOutputStream oout = new ObjectOutputStream(s.getOutputStream());
+		oout.writeObject(event);
+		oout.close();
+		s.close();
+	}
+
+	private Event receiveEvent(Socket s) throws IOException {
+		ObjectInputStream oin = new ObjectInputStream(s.getInputStream());
+		Event event = null;
+		try {
+			event = (Event) oin.readObject();
+		} catch (ClassCastException e) {
+			logger.error("Non-event object received.", e);
+		} catch (ClassNotFoundException e2) {
+			logger.error("Unresolvable object type received.", e2);
+		}
+
+		return event;
 	}
 
 	static class DynasoarNodeListener implements ServiceListener {
@@ -173,4 +249,5 @@ public class NodeCommunicator implements Runnable {
 			}
 		}
 	}
+
 }
