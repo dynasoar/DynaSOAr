@@ -1,5 +1,7 @@
 # DynaSOAr
 
+DynaSOAr is a dynamically scalable distributed service architecture written in Java.
+
 ## Features
 * Automatically finds nodes on the network using Zeroconf/Bonjour (Multicast DNS)
 
