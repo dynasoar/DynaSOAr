@@ -1,15 +1,19 @@
 package org.dynasoar.service;
 
-import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
 
 import org.apache.log4j.Logger;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.dynasoar.comm.EventHandler;
 import org.dynasoar.comm.NodeCommunicator;
 import org.dynasoar.config.Configuration;
-import org.dynasoar.sync.ChangeEvent;
 import org.dynasoar.sync.DirectoryWatcher;
+import org.dynasoar.sync.ServiceConfigChangeEvent;
+import org.dynasoar.sync.SyncEvent;
 import org.dynasoar.util.Event;
 
 /**
@@ -52,22 +56,18 @@ public class ServiceMonitor extends EventHandler implements Runnable {
 		// to the directory
 		String serviceConfigDirPath = Configuration
 				.getConfig("serviceConfigDir");
-		DirectoryWatcher dir = new DirectoryWatcher(
+		DirectoryWatcher watcher = new DirectoryWatcher(
 				new ServiceConfigChangeEvent());
-		dir.watch(serviceConfigDirPath);
+		watcher.watch(serviceConfigDirPath);
 
 		// TODO: Thread loop
 		Thread thisThread = Thread.currentThread();
 		while (thisThread == th) {
-			// In case of any changes in directory, Read service config file,
-			// load/re-deploy the service on local server
-
-			// Notify NodeCommunicator of all the changes occurred
-
+			logger.info("Check if this loops too often.");
 		}
 
 		// Handle clean exit
-		dir.exit();
+		watcher.exit();
 		logger.info("ServiceMonitor shutdown complete");
 	}
 
@@ -89,76 +89,92 @@ public class ServiceMonitor extends EventHandler implements Runnable {
 	public void handle(Event event) {
 		logger.info("Processing an event: " + event.toString());
 
-		// Delegate handling of the event if possible
-		if (event instanceof ServiceChangeEvent) {
+		ServiceChangeEvent scEvent = (ServiceChangeEvent) event;
+		DynasoarService service = scEvent.getService();
 
+		try {
+			// Update local service registry and take necessary actions
+			switch (scEvent.getType()) {
+			case ADDED:
+				this.addOrUpdateService(service);
+				break;
+			case CHANGED:
+				this.addOrUpdateService(service);
+				break;
+			case REMOVED:
+				this.removeService(service.getShortName());
+				break;
+			case DEPLOYED:
+			case REDEPLOYED:
+				this.deploy(service.getShortName());
+				break;
+			case UNDEPLOYED:
+				this.undeploy(service.getShortName());
+				NodeCommunicator.newEvent(new ServiceChangeEvent(service,
+						ServiceEventType.UNDEPLOYED));
+				break;
+			}
+		} catch (ServiceDeployException e) {
+			logger.error("An error occurred while deploying service.", e);
+		} catch (IOException e) {
+			logger.error("An error occurred while copying WAR package.", e);
+		}
+
+		// Emit a SyncEvent to synchronize the changes to other nodes
+		NodeCommunicator.newEvent(new SyncEvent(scEvent.getService(), scEvent
+				.getType()));
+	}
+
+	private void addOrUpdateService(DynasoarService service) {
+		DynasoarService existing = serviceMap.get(service.getShortName());
+
+		if (existing == null) {
+			serviceMap.put(service.getShortName(), service);
+		} else {
+			serviceMap
+					.put(service.getShortName(), existing.updateNode(service));
+		}
+
+		// Deploy it if required
+		if (service.isDeployed()) {
+			NodeCommunicator.newEvent(new ServiceChangeEvent(service,
+					ServiceEventType.DEPLOYED));
+		} else {
+			NodeCommunicator.newEvent(new ServiceChangeEvent(service,
+					ServiceEventType.UNDEPLOYED));
 		}
 	}
 
-	/**
-	 * Implements ChangeEvent interface, which will handle directory change
-	 * events of Service Config Directory
-	 * 
-	 * @author Rakshit Menpara
-	 */
-	public static class ServiceConfigChangeEvent implements ChangeEvent {
-
-		@Override
-		public void fileCreated(String path) {
-			DynasoarService service = this.readServiceConfig(path);
-
-			if (service != null) {
-				serviceMap.put(service.getShortName(), service);
-				NodeCommunicator.newEvent(new ServiceChangeEvent(service,
-						ServiceEventType.ADDED));
-				logger.info("Service added - " + service.getName());
-			} else {
-				logger.info("Service Config File Null");
-			}
-		}
-
-		@Override
-		public void fileModified(String path) {
-			DynasoarService service = this.readServiceConfig(path);
-
-			if (service != null) {
-				serviceMap.put(service.getShortName(), service);
-				logger.info("Service changed - " + service.getName());
-				NodeCommunicator.newEvent(new ServiceChangeEvent(service,
-						ServiceEventType.CHANGED));
-			} else {
-				logger.info("Service Config File Null");
-			}
-		}
-
-		@Override
-		public void fileRemoved(String path) {
-			// TODO: Correct
-			DynasoarService service = this.readServiceConfig(path);
-
-			if (service != null) {
-				serviceMap.remove(service.getShortName());
-				logger.info("Service removed - " + service.getName());
-				NodeCommunicator.newEvent(new ServiceChangeEvent(service,
-						ServiceEventType.REMOVED));
-			} else {
-				logger.info("Service Config File Null");
-			}
-		}
-
-		private DynasoarService readServiceConfig(String path) {
-			// Read and parse the config file using JSON parser (jackson)
-			DynasoarService service = null;
-			File configFile = new File(path);
-			ObjectMapper mapper = new ObjectMapper();
-			try {
-				service = mapper.readValue(configFile, DynasoarService.class);
-				service.setShortName(configFile.getName());
-			} catch (Exception e) {
-				logger.error("ServiceConfig parsing failed.", e);
-			}
-
-			return service;
-		}
+	private void removeService(String serviceName) {
+		serviceMap.remove(serviceName);
 	}
+
+	private void deploy(String serviceName) throws ServiceDeployException,
+			IOException {
+		DynasoarService service = serviceMap.get(serviceName);
+
+		if (service == null)
+			throw new ServiceDeployException("Service not found");
+
+		Path warFilePath = Paths.get(
+				Configuration.getConfig("servicePackageDir"), serviceName
+						+ ".war");
+		Path destinationPath = Paths.get(Configuration.getConfig("deployDir"));
+
+		if (!warFilePath.toFile().exists()) {
+			throw new ServiceDeployException("WAR Package does not exist.");
+		}
+
+		Files.copy(warFilePath, destinationPath,
+				StandardCopyOption.ATOMIC_MOVE,
+				StandardCopyOption.REPLACE_EXISTING);
+	}
+
+	private void undeploy(String serviceName) throws IOException {
+		Path deployPath = Paths.get(Configuration.getConfig("deployDir"),
+				serviceName + ".war");
+
+		Files.deleteIfExists(deployPath);
+	}
+
 }

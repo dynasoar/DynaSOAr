@@ -120,10 +120,10 @@ public class NodeCommunicator extends EventHandler implements Runnable {
 				Socket listener = new Socket();
 				listener.bind(new InetSocketAddress(Integer
 						.parseInt(Configuration.getConfig("commPort"))));
-				
+
 				Event event = this.receiveEvent(listener);
 
-				if(event != null) {
+				if (event != null) {
 					newEvent(event);
 				}
 				// TODO: Make sure all nodes are in sync

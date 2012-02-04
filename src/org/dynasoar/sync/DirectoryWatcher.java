@@ -19,10 +19,10 @@ import org.apache.log4j.Logger;
 public class DirectoryWatcher {
 
 	private static Logger logger = Logger.getLogger(DirectoryWatcher.class);
-	private ChangeEvent changeEvent = null;
+	private ServiceConfigChangeEvent changeEvent = null;
 	private WatchService watcher = null;
 
-	public DirectoryWatcher(ChangeEvent event) {
+	public DirectoryWatcher(ServiceConfigChangeEvent event) {
 		this.changeEvent = event;
 	}
 
@@ -48,14 +48,16 @@ public class DirectoryWatcher {
 					if (event.kind() == StandardWatchEventKinds.ENTRY_CREATE) {
 						logger.info("Created: " + event.context().toString());
 						changeEvent.fileCreated(event.context().toString());
-					}
-					if (event.kind() == StandardWatchEventKinds.ENTRY_DELETE) {
+					} else if (event.kind() == StandardWatchEventKinds.ENTRY_DELETE) {
 						logger.info("Delete: " + event.context().toString());
 						changeEvent.fileRemoved(event.context().toString());
-					}
-					if (event.kind() == StandardWatchEventKinds.ENTRY_MODIFY) {
+					} else if (event.kind() == StandardWatchEventKinds.ENTRY_MODIFY) {
 						logger.info("Modify: " + event.context().toString());
 						changeEvent.fileModified(event.context().toString());
+					} else if (event.kind() == StandardWatchEventKinds.OVERFLOW) {
+						logger.error("WatchService overflow. Some changes might have been lost.");
+						// TODO: Handle this to re-initialize the service
+						// repository from serviceConfig
 					}
 				}
 
