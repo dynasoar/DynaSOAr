@@ -1,4 +1,4 @@
-package org.dynasoar.comm;
+package org.dynasoar.util;
 
 /**
  * Represents a DynaSOAr intra-node and inter-node event.

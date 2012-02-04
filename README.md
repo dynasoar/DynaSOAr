@@ -6,7 +6,8 @@ DynaSOAr is a dynamically scalable distributed service architecture written in J
 * Automatically finds nodes on the network using Zeroconf/Bonjour (Multicast DNS)
 
 ## TODO
-* jmDNS should bind to all the network interfaces rather than the default one only
+* jmDNS should bind to all the network interfaces rather than the default one only.
+* Comm should also listen to all the network interfaces.
 * ServiceMonitor should ignore all but json files in serviceConfig directory
 * Node communicate using TCP Sockets
 * Threads communicate using built-in event queue
