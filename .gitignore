@@ -5,4 +5,5 @@ build/*
 .classpath
 .project
 bin/*
+dist/*
 /lib/nblibraries.properties
