@@ -11,8 +11,37 @@ import org.dynasoar.service.ServiceEventType;
  * @author Rakshit Menpara
  */
 public class SyncEvent implements CommEvent {
-
+        private DynasoarService service = null;
+	private ServiceEventType type = null;
+        private String WARHash = null;
+        private String ConfigHash = null;
+        
 	public SyncEvent(DynasoarService service, ServiceEventType type) {
+		this.service = service;
+		this.type = type;
+	}
 
+	public ServiceEventType getType() {
+		return this.type;
+	}
+        
+        public DynasoarService getService() {
+		return this.service;
+	}
+
+	public void setWARMD5Hash(String WARHash) {
+        	this.WARHash = WARHash;
+	}
+
+	public void setConfigMD5Hash(String ConfigHash) {
+                this.ConfigHash = ConfigHash;
+	}
+
+	public String getWARMD5Hash() {
+	        return this.WARHash;
+	}
+        
+        public String getConfigMD5Hash() {
+            	return this.ConfigHash;
 	}
 }
