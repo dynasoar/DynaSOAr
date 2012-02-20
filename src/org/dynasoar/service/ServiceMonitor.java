@@ -19,6 +19,7 @@ import org.dynasoar.sync.DirectoryWatcher;
 import org.dynasoar.sync.ServiceConfigChangeEvent;
 import org.dynasoar.sync.SyncEvent;
 import org.dynasoar.util.Event;
+import org.dynasoar.webserver.WebServer;
 
 /**
  * ServiceMonitor is responsible for monitoring changes in Service config files.
@@ -61,14 +62,22 @@ public class ServiceMonitor extends EventHandler implements Runnable {
         String serviceConfigDirPath = Configuration.getConfig("serviceConfigDir");
         DirectoryWatcher watcher = new DirectoryWatcher(
                 new ServiceConfigChangeEvent());
-        watcher.watch(serviceConfigDirPath);
-
+        watcher.start(serviceConfigDirPath);
+        
         // TODO: Thread loop
-        Thread thisThread = Thread.currentThread();
-        while (thisThread == th) {
-            logger.info("Check if this loops too often.");
-        }
+        try {
+            Thread thisThread = Thread.currentThread();
+             while (thisThread == th) {
+                logger.info("Check if this loops too often.");
+                this.processEvents();
+                Thread.sleep(5000);
+//            break;
 
+            }
+        } catch (InterruptedException e) {
+            logger.error("Thread Interrupted"+ e);
+        }
+            
         // Handle clean exit
         watcher.exit();
         logger.info("ServiceMonitor shutdown complete");
@@ -93,9 +102,10 @@ public class ServiceMonitor extends EventHandler implements Runnable {
         logger.info("Processing an event: " + event.toString());
 
         ServiceChangeEvent scEvent = (ServiceChangeEvent) event;
-        SyncEvent syncEvent = (SyncEvent) event;
+        //SyncEvent syncEvent = (SyncEvent) event;
         DynasoarService service = scEvent.getService();
-
+        String WARchecksum = null;
+        String Configchecksum = null;
         try {
             // Update local service registry and take necessary actions
             switch (scEvent.getType()) {
@@ -125,22 +135,24 @@ public class ServiceMonitor extends EventHandler implements Runnable {
         }
 
         //Setting the path of the WAR file and Config file of the modified service
-        String WARfilePath = null;
-        String ConfigfilePath = null;
+             
         try {
-            WARfilePath = getMD5Checksum(Paths.get(Configuration.getConfig("deployDir"), 
-                    service + ".war").toString());
-            ConfigfilePath = getMD5Checksum(Paths.get(Configuration.getConfig("serviceConfigDir"), 
-                    service + ".json").toString());
+            WARchecksum = getMD5Checksum(Paths.get(Configuration.getConfig("deployDir"),
+                    service.getShortName() + ".war").toString());
+            Configchecksum = getMD5Checksum(Paths.get(Configuration.getConfig("serviceConfigDir"),
+                    service.getShortName() + ".json").toString());
+            logger.info("WARfile MD5 hash checksum =" +WARchecksum);
+            logger.info("Configfile MD5 hash checksum =" +Configchecksum);
+            
         } catch (Exception ex) {
-            logger.error("Cannot find the modified WAR file/Config file.");
+            logger.error("Cannot find the modified WAR file/Config file."+ex);
         }
-        
+
         //Calculating the MD5 Hash of the config file and WAR file of the modified service
-        
-        syncEvent.setConfigMD5Hash(ConfigfilePath);
-        syncEvent.setWARMD5Hash(WARfilePath);
-        
+
+        //syncEvent.setConfigMD5Hash(ConfigfilePath);
+        //syncEvent.setWARMD5Hash(WARfilePath);
+
         // Emit a SyncEvent to synchronize the changes to other nodes
         NodeCommunicator.newEvent(new SyncEvent(scEvent.getService(), scEvent.getType()));
     }
@@ -175,19 +187,18 @@ public class ServiceMonitor extends EventHandler implements Runnable {
         if (service == null) {
             throw new ServiceDeployException("Service not found");
         }
-
+        
         Path warFilePath = Paths.get(
                 Configuration.getConfig("servicePackageDir"), serviceName
                 + ".war");
-        Path destinationPath = Paths.get(Configuration.getConfig("deployDir"));
-
+        Path destinationPath = Paths.get(Configuration.getConfig("deployDir"), "/"+serviceName + ".war");
+        
         if (!warFilePath.toFile().exists()) {
             throw new ServiceDeployException("WAR Package does not exist.");
         }
-
+        //Copies the service into deploy directory 
         Files.copy(warFilePath, destinationPath,
-                StandardCopyOption.ATOMIC_MOVE,
-                StandardCopyOption.REPLACE_EXISTING);
+                StandardCopyOption.REPLACE_EXISTING);        
     }
 
     private void undeploy(String serviceName) throws IOException {

@@ -1,4 +1,4 @@
-# DynaSOAr
+﻿# DynaSOAr
 
 DynaSOAr is a dynamically scalable distributed service architecture written in Java.
 
@@ -20,3 +20,5 @@ DynaSOAr is a dynamically scalable distributed service architecture written in J
 
 ## Known issues
 * Server hangs when immediately shut down after starting
+* When a service config file is modified event.tostring() doesnt give the modified file name. Hence it gives an error while parsing it.
+* MD5 hash Checksum calculated for modified WARfile/Config file throws exception for the first time as it does not find the modified WAR file/Config file (as it is out of Swith Case statement) .

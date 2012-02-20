@@ -50,10 +50,11 @@ public class WebServer implements Runnable {
 		WebAppContext webapp = new WebAppContext();
 		File warPath = new File(Configuration.getConfig("deployDir"));
 
-		webapp.setClassLoader(Thread.currentThread().getContextClassLoader());
+		System.out.println("Jetty WAR file path = " +warPath);
+                webapp.setClassLoader(Thread.currentThread().getContextClassLoader());
 		webapp.setContextPath("/");
 		webapp.setWar(warPath.getAbsolutePath());
-
+                System.out.println("Absolute path =" +warPath.getAbsolutePath().toString());
 		HandlerList handlers = new HandlerList();
 		handlers.setHandlers(new Handler[] { webapp, new DefaultHandler() });
 		jettyServer.setHandler(handlers);
