@@ -24,3 +24,9 @@ bin/*
 /lib/junit_4/junit-4.10-javadoc.jar
 /lib/junit_4/junit-4.10.jar
 /lib/CopyLibs/org-netbeans-modules-java-j2seproject-copylibstask.jar
+/config.json~
+/nbdist/lib/commons-el-1.0.jar
+/nbdist/lib/javax.servlet.jsp.jar
+/nbdist/lib/org.apache.jasper.jar
+/sample/CalculatorApp.json~
+/sample/serviceConfig/Factorial-WebService_Client.json~
