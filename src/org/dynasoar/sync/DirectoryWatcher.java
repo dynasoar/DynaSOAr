@@ -79,7 +79,7 @@ public class DirectoryWatcher implements Runnable {
 				if (!valid) {
 					logger.info("Invalid WatchKey. Exiting the loop.");
 					break;
-				}
+				} 
 			}
 
 		} catch (Exception e) {

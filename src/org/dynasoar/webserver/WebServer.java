@@ -5,11 +5,17 @@ import java.io.File;
 import org.apache.log4j.Logger;
 import org.dynasoar.comm.NodeCommunicator;
 import org.dynasoar.config.Configuration;
+import org.eclipse.jetty.deploy.DeploymentManager;
+import org.eclipse.jetty.deploy.providers.WebAppProvider;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.handler.ContextHandlerCollection;
 import org.eclipse.jetty.server.handler.DefaultHandler;
+import org.eclipse.jetty.server.handler.HandlerCollection;
 import org.eclipse.jetty.server.handler.HandlerList;
+import org.eclipse.jetty.webapp.JettyWebXmlConfiguration;
 import org.eclipse.jetty.webapp.WebAppContext;
+import org.eclipse.jetty.webapp.WebXmlConfiguration;
 
 public class WebServer implements Runnable {
 
@@ -47,7 +53,7 @@ public class WebServer implements Runnable {
 		Server jettyServer = new Server(Integer.parseInt(Configuration
 				.getConfig("webServerPort")));
 
-		WebAppContext webapp = new WebAppContext();
+		/*WebAppContext webapp = new WebAppContext();
 		File warPath = new File(Configuration.getConfig("deployDir"));
 
 		System.out.println("Jetty WAR file path = " +warPath);
@@ -57,9 +63,29 @@ public class WebServer implements Runnable {
                 System.out.println("Absolute path =" +warPath.getAbsolutePath().toString());
 		HandlerList handlers = new HandlerList();
 		handlers.setHandlers(new Handler[] { webapp, new DefaultHandler() });
-		jettyServer.setHandler(handlers);
+		jettyServer.setHandler(handlers);*/
+                
+                File warPath = new File(Configuration.getConfig("deployDir"));
+                
+                HandlerCollection handlers = new HandlerCollection();
+                ContextHandlerCollection contexts = new ContextHandlerCollection();
+                handlers.setHandlers(new Handler[] { contexts, new DefaultHandler() });
+                 
+                 jettyServer.setHandler(handlers);
+            
+                 DeploymentManager deployer = new DeploymentManager();
+                 deployer.setContexts(contexts);
+            
+                 jettyServer.addBean(deployer);
 
-		jettyServer.start();
+                 WebAppProvider webAppProvider = new WebAppProvider();
+                  
+                 webAppProvider.setExtractWars(true);
+                 webAppProvider.setScanInterval(10);
+                 webAppProvider.setMonitoredDirName(warPath.getAbsolutePath());
+                 deployer.addAppProvider(webAppProvider);
+                 
+                 jettyServer.start();
 
 		return jettyServer;
 	}

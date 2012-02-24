@@ -15,7 +15,7 @@ public class SyncEvent implements CommEvent {
 	private ServiceEventType type = null;
         private String WARHash = null;
         private String ConfigHash = null;
-        
+        private byte [] WARfile = null;
 	public SyncEvent(DynasoarService service, ServiceEventType type) {
 		this.service = service;
 		this.type = type;
@@ -44,4 +44,13 @@ public class SyncEvent implements CommEvent {
         public String getConfigMD5Hash() {
             	return this.ConfigHash;
 	}
+        
+        public void setWARfile(byte WARfile[]){
+                System.arraycopy(WARfile, 0, this.WARfile, 0, WARfile.length);
+        }
+        
+        public byte [] getWARfile() {
+                return WARfile;
+        }
+        
 }

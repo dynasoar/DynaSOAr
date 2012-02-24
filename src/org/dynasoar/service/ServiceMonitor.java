@@ -1,5 +1,6 @@
 package org.dynasoar.service;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -63,11 +64,11 @@ public class ServiceMonitor extends EventHandler implements Runnable {
         DirectoryWatcher watcher = new DirectoryWatcher(
                 new ServiceConfigChangeEvent());
         watcher.start(serviceConfigDirPath);
-        
+
         // TODO: Thread loop
         try {
             Thread thisThread = Thread.currentThread();
-             while (thisThread == th) {
+            while (thisThread == th) {
                 logger.info("Check if this loops too often.");
                 this.processEvents();
                 Thread.sleep(5000);
@@ -75,9 +76,9 @@ public class ServiceMonitor extends EventHandler implements Runnable {
 
             }
         } catch (InterruptedException e) {
-            logger.error("Thread Interrupted"+ e);
+            logger.error("Thread Interrupted" + e);
         }
-            
+
         // Handle clean exit
         watcher.exit();
         logger.info("ServiceMonitor shutdown complete");
@@ -106,6 +107,10 @@ public class ServiceMonitor extends EventHandler implements Runnable {
         DynasoarService service = scEvent.getService();
         String WARchecksum = null;
         String Configchecksum = null;
+        String WARPath = null;
+        String ConfigPath = null;
+        byte [] WARArray = null;
+        
         try {
             // Update local service registry and take necessary actions
             switch (scEvent.getType()) {
@@ -134,24 +139,31 @@ public class ServiceMonitor extends EventHandler implements Runnable {
             logger.error("An error occurred while copying WAR package.", e);
         }
 
-        //Setting the path of the WAR file and Config file of the modified service
-             
+        //Calculating the MD5 hash of the WAR file and Config file of the modified service
+
         try {
-            WARchecksum = getMD5Checksum(Paths.get(Configuration.getConfig("deployDir"),
-                    service.getShortName() + ".war").toString());
-            Configchecksum = getMD5Checksum(Paths.get(Configuration.getConfig("serviceConfigDir"),
-                    service.getShortName() + ".json").toString());
+            WARPath = Paths.get(Configuration.getConfig("deployDir"),
+                    service.getShortName() + ".war").toString();
+            ConfigPath = Paths.get(Configuration.getConfig("serviceConfigDir"),
+                    service.getShortName() + ".json").toString();
+            
+            
+            Configchecksum = getMD5Checksum(ConfigPath);
+            WARchecksum = getMD5Checksum(WARPath);
+            WARArray = WARtoArray(WARPath);
+                    
             logger.info("WARfile MD5 hash checksum =" +WARchecksum);
             logger.info("Configfile MD5 hash checksum =" +Configchecksum);
-            
+
         } catch (Exception ex) {
-            logger.error("Cannot find the modified WAR file/Config file."+ex);
+            logger.error("Cannot find the modified WAR file/Config file." + ex);
         }
 
         //Calculating the MD5 Hash of the config file and WAR file of the modified service
 
         //syncEvent.setConfigMD5Hash(ConfigfilePath);
         //syncEvent.setWARMD5Hash(WARfilePath);
+        //syncEvent.setWARfile(WARArray);
 
         // Emit a SyncEvent to synchronize the changes to other nodes
         NodeCommunicator.newEvent(new SyncEvent(scEvent.getService(), scEvent.getType()));
@@ -187,18 +199,18 @@ public class ServiceMonitor extends EventHandler implements Runnable {
         if (service == null) {
             throw new ServiceDeployException("Service not found");
         }
-        
+
         Path warFilePath = Paths.get(
                 Configuration.getConfig("servicePackageDir"), serviceName
                 + ".war");
-        Path destinationPath = Paths.get(Configuration.getConfig("deployDir"), "/"+serviceName + ".war");
-        
+        Path destinationPath = Paths.get(Configuration.getConfig("deployDir"), "/" + serviceName + ".war");
+
         if (!warFilePath.toFile().exists()) {
             throw new ServiceDeployException("WAR Package does not exist.");
         }
         //Copies the service into deploy directory 
         Files.copy(warFilePath, destinationPath,
-                StandardCopyOption.REPLACE_EXISTING);        
+                StandardCopyOption.REPLACE_EXISTING);
     }
 
     private void undeploy(String serviceName) throws IOException {
@@ -231,5 +243,37 @@ public class ServiceMonitor extends EventHandler implements Runnable {
             result += Integer.toString((b[i] & 0xff) + 0x100, 16).substring(1);
         }
         return result;
+    }
+
+    public static byte[] WARtoArray(String filename) {
+        byte[] bytes = null;
+        try {
+            
+            File file = new File(filename);
+            InputStream is = new FileInputStream(file);
+            
+            long length = 0;
+            length = file.length();
+            bytes = new byte[(int) length];
+            int offset = 0;
+            int numRead = 0;
+            
+            if(length > Integer.MAX_VALUE) {
+                logger.info("File is too large");
+            }
+            
+            while(numRead >= 0){
+                numRead = is.read(bytes, offset, bytes.length - offset);
+                offset += numRead;
+            }
+            if(offset < bytes.length) {
+                logger.error("Could not complete reading WAR file:" +file.getName());
+            }
+            is.close();
+            
+        } catch (Exception e) {
+            logger.error("Cannot find the corresponding WAR file." +e);
+        }
+        return bytes;
     }
 }
