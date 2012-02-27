@@ -55,9 +55,9 @@ public abstract class EventHandler implements EventListener {
 
 		// Clear the event queue once processed
 		events.clear();
-                
-                // Wait for new events to be added
-                this.wait();
+
+		// Wait for new events to be added
+		this.wait();
 	}
 
 	private void delegate(Event event) {

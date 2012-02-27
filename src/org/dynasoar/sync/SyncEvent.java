@@ -11,11 +11,12 @@ import org.dynasoar.service.ServiceEventType;
  * @author Rakshit Menpara
  */
 public class SyncEvent implements CommEvent {
-        private DynasoarService service = null;
+	private DynasoarService service = null;
 	private ServiceEventType type = null;
-        private String WARHash = null;
-        private String ConfigHash = null;
-        private byte [] WARfile = null;
+	private String WARHash = null;
+	private String ConfigHash = null;
+	private byte[] WARfile = null;
+
 	public SyncEvent(DynasoarService service, ServiceEventType type) {
 		this.service = service;
 		this.type = type;
@@ -24,33 +25,33 @@ public class SyncEvent implements CommEvent {
 	public ServiceEventType getType() {
 		return this.type;
 	}
-        
-        public DynasoarService getService() {
+
+	public DynasoarService getService() {
 		return this.service;
 	}
 
 	public void setWARMD5Hash(String WARHash) {
-        	this.WARHash = WARHash;
+		this.WARHash = WARHash;
 	}
 
 	public void setConfigMD5Hash(String ConfigHash) {
-                this.ConfigHash = ConfigHash;
+		this.ConfigHash = ConfigHash;
 	}
 
 	public String getWARMD5Hash() {
-	        return this.WARHash;
+		return this.WARHash;
 	}
-        
-        public String getConfigMD5Hash() {
-            	return this.ConfigHash;
+
+	public String getConfigMD5Hash() {
+		return this.ConfigHash;
 	}
-        
-        public void setWARfile(byte WARfile[]){
-                System.arraycopy(WARfile, 0, this.WARfile, 0, WARfile.length);
-        }
-        
-        public byte [] getWARfile() {
-                return WARfile;
-        }
-        
+
+	public void setWARfile(byte WARfile[]) {
+		System.arraycopy(WARfile, 0, this.WARfile, 0, WARfile.length);
+	}
+
+	public byte[] getWARfile() {
+		return WARfile;
+	}
+
 }

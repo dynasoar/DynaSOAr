@@ -53,39 +53,41 @@ public class WebServer implements Runnable {
 		Server jettyServer = new Server(Integer.parseInt(Configuration
 				.getConfig("webServerPort")));
 
-		/*WebAppContext webapp = new WebAppContext();
+		/*
+		 * WebAppContext webapp = new WebAppContext(); File warPath = new
+		 * File(Configuration.getConfig("deployDir"));
+		 * 
+		 * System.out.println("Jetty WAR file path = " +warPath);
+		 * webapp.setClassLoader
+		 * (Thread.currentThread().getContextClassLoader());
+		 * webapp.setContextPath("/"); webapp.setWar(warPath.getAbsolutePath());
+		 * System.out.println("Absolute path ="
+		 * +warPath.getAbsolutePath().toString()); HandlerList handlers = new
+		 * HandlerList(); handlers.setHandlers(new Handler[] { webapp, new
+		 * DefaultHandler() }); jettyServer.setHandler(handlers);
+		 */
+
 		File warPath = new File(Configuration.getConfig("deployDir"));
 
-		System.out.println("Jetty WAR file path = " +warPath);
-                webapp.setClassLoader(Thread.currentThread().getContextClassLoader());
-		webapp.setContextPath("/");
-		webapp.setWar(warPath.getAbsolutePath());
-                System.out.println("Absolute path =" +warPath.getAbsolutePath().toString());
-		HandlerList handlers = new HandlerList();
-		handlers.setHandlers(new Handler[] { webapp, new DefaultHandler() });
-		jettyServer.setHandler(handlers);*/
-                
-                File warPath = new File(Configuration.getConfig("deployDir"));
-                
-                HandlerCollection handlers = new HandlerCollection();
-                ContextHandlerCollection contexts = new ContextHandlerCollection();
-                handlers.setHandlers(new Handler[] { contexts, new DefaultHandler() });
-                 
-                 jettyServer.setHandler(handlers);
-            
-                 DeploymentManager deployer = new DeploymentManager();
-                 deployer.setContexts(contexts);
-            
-                 jettyServer.addBean(deployer);
+		HandlerCollection handlers = new HandlerCollection();
+		ContextHandlerCollection contexts = new ContextHandlerCollection();
+		handlers.setHandlers(new Handler[] { contexts, new DefaultHandler() });
 
-                 WebAppProvider webAppProvider = new WebAppProvider();
-                  
-                 webAppProvider.setExtractWars(true);
-                 webAppProvider.setScanInterval(10);
-                 webAppProvider.setMonitoredDirName(warPath.getAbsolutePath());
-                 deployer.addAppProvider(webAppProvider);
-                 
-                 jettyServer.start();
+		jettyServer.setHandler(handlers);
+
+		DeploymentManager deployer = new DeploymentManager();
+		deployer.setContexts(contexts);
+
+		jettyServer.addBean(deployer);
+
+		WebAppProvider webAppProvider = new WebAppProvider();
+
+		webAppProvider.setExtractWars(true);
+		webAppProvider.setScanInterval(10);
+		webAppProvider.setMonitoredDirName(warPath.getAbsolutePath());
+		deployer.addAppProvider(webAppProvider);
+
+		jettyServer.start();
 
 		return jettyServer;
 	}

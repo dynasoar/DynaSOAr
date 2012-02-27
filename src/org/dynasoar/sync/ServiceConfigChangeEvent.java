@@ -64,7 +64,7 @@ public class ServiceConfigChangeEvent {
 		try {
 			service = mapper.readValue(configFile, DynasoarService.class);
 			service.setShortName(configFile.getName().split("\\.")[0]);
-                } catch (Exception e) {
+		} catch (Exception e) {
 			logger.error("ServiceConfig parsing failed.", e);
 		}
 
