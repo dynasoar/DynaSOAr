@@ -27,7 +27,7 @@ public abstract class EventHandler implements EventListener {
 		this.events = new ArrayList<Event>();
 	}
 
-	public void emitEvent(Event event) {
+	public synchronized void emitEvent(Event event) {
 		// Add event to the processing list
 		this.events.add(event);
 
@@ -39,7 +39,7 @@ public abstract class EventHandler implements EventListener {
 	/**
 	 * Processes or delegates all the events available in the list.
 	 */
-	public void processEvents() {
+	public synchronized void processEvents() throws InterruptedException {
 		Iterator<Event> i = events.iterator();
 		while (i.hasNext()) {
 			Event current = i.next();
@@ -55,6 +55,9 @@ public abstract class EventHandler implements EventListener {
 
 		// Clear the event queue once processed
 		events.clear();
+                
+                // Wait for new events to be added
+                this.wait();
 	}
 
 	private void delegate(Event event) {

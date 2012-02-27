@@ -58,7 +58,7 @@ public class Configuration {
 	 */
 	public static String getConfig(String name) {
 		// TODO: Check if the config hashmap is loaded first
-		System.out.println("Name: " + config.containsValue("serviceConfigDir"));
+		
 		if (config.isEmpty()) {
 			return null;
 		} else {

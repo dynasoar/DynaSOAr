@@ -1,7 +1,7 @@
 {
 	"nodeName": "FirstNode",
-	"commPort": "8079",
-	"webServerPort": "8080",
+	"commPort": "9000",
+	"webServerPort": "9001",
 	"serviceConfigDir":"./sample/serviceConfig/",
 	"servicePackageDir":"./sample/servicePackage/",
 	"deployDir":"./sample/deploy/"

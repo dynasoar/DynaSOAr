@@ -16,16 +16,29 @@ import java.nio.file.WatchService;
 import org.apache.log4j.Logger;
 
 // TODO: Write clean exit
-public class DirectoryWatcher {
+public class DirectoryWatcher implements Runnable {
 
 	private static Logger logger = Logger.getLogger(DirectoryWatcher.class);
 	private ServiceConfigChangeEvent changeEvent = null;
 	private WatchService watcher = null;
-
-	public DirectoryWatcher(ServiceConfigChangeEvent event) {
-		this.changeEvent = event;
+        private static DirectoryWatcher current = null;
+	private static Thread th = null;
+        private static String dirPath = null;
+        
+        public void start(String dirPath) {
+            
+		this.dirPath = dirPath;
+		th = new Thread(this, "DirectoryWatcher");
+		th.start();                
 	}
-
+       
+	public DirectoryWatcher(ServiceConfigChangeEvent event) {
+                this.changeEvent = event;
+	}
+        public void run() {
+                    System.out.println("Path =" +dirPath);
+                    watch(dirPath);
+        }
 	public void watch(String dirPath) {
 
 		Path dirToMonitor = Paths.get(dirPath);
@@ -47,13 +60,13 @@ public class DirectoryWatcher {
 				for (WatchEvent<?> event : key.pollEvents()) {
 					if (event.kind() == StandardWatchEventKinds.ENTRY_CREATE) {
 						logger.info("Created: " + event.context().toString());
-						changeEvent.fileCreated(event.context().toString());
+						changeEvent.fileCreated(dirPath + event.context().toString());
 					} else if (event.kind() == StandardWatchEventKinds.ENTRY_DELETE) {
 						logger.info("Delete: " + event.context().toString());
-						changeEvent.fileRemoved(event.context().toString());
+						changeEvent.fileRemoved(dirPath + event.context().toString());
 					} else if (event.kind() == StandardWatchEventKinds.ENTRY_MODIFY) {
 						logger.info("Modify: " + event.context().toString());
-						changeEvent.fileModified(event.context().toString());
+						changeEvent.fileModified(dirPath + event.context().toString());
 					} else if (event.kind() == StandardWatchEventKinds.OVERFLOW) {
 						logger.error("WatchService overflow. Some changes might have been lost.");
 						// TODO: Handle this to re-initialize the service
@@ -66,7 +79,7 @@ public class DirectoryWatcher {
 				if (!valid) {
 					logger.info("Invalid WatchKey. Exiting the loop.");
 					break;
-				}
+				} 
 			}
 
 		} catch (Exception e) {
