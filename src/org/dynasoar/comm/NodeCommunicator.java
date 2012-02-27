@@ -4,9 +4,8 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.InetAddress;
-import java.net.InetSocketAddress;
+import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.SocketAddress;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.logging.ConsoleHandler;
@@ -112,20 +111,20 @@ public class NodeCommunicator extends EventHandler implements Runnable {
 				this.processEvents();
 
 				// Wait till any other event is added
-				logger.info("Waiting till a new event is added.");
-				super.wait();
-				logger.info("Resuming operations.");
+				// logger.info("Waiting till a new event is added.");
+				// super.wait();
+				// logger.info("Resuming operations.");
 
 				// TODO: Start node comm listener
-				Socket listener = new Socket();
-				listener.bind(new InetSocketAddress(Integer
-						.parseInt(Configuration.getConfig("commPort"))));
+				// ServerSocket listener = new ServerSocket(Integer
+				// .parseInt(Configuration.getConfig("commPort")));
 
-				Event event = this.receiveEvent(listener);
+				/*
+				 * Event event = this.receiveEvent(listener);
+				 * 
+				 * if (event != null) { newEvent(event); }
+				 */
 
-				if (event != null) {
-					newEvent(event);
-				}
 				// TODO: Make sure all nodes are in sync
 
 				// Perhaps, calculate a hash of config files and make sure all
@@ -202,6 +201,7 @@ public class NodeCommunicator extends EventHandler implements Runnable {
 	}
 
 	private Event receiveEvent(Socket s) throws IOException {
+
 		ObjectInputStream oin = new ObjectInputStream(s.getInputStream());
 		Event event = null;
 		try {
@@ -217,7 +217,9 @@ public class NodeCommunicator extends EventHandler implements Runnable {
 
 	static class DynasoarNodeListener implements ServiceListener {
 		public void serviceAdded(ServiceEvent event) {
-			if (event.getInfo() != null) {
+			if (event.getInfo() != null
+					&& !event.getInfo().getInetAddress().isLoopbackAddress()
+					&& !event.getInfo().getInetAddress().isSiteLocalAddress()) {
 				logger.info("New DynaSOAr Service node added - "
 						+ event.getInfo());
 				logger.debug("InetAddress: " + event.getInfo().getInetAddress());

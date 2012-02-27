@@ -5,4 +5,7 @@ build/*
 .classpath
 .project
 bin/*
+dist/*
 /lib/nblibraries.properties
+/nbdist/*
+manifest.mf
